@@ -46,7 +46,7 @@ class ViewController: UIViewController,UISearchBarDelegate, UICollectionViewDele
 
     func getImageSearchModel(text: String, page: Int = 1) {
         lastPage = page
-        let urlString = "https://flickr.com/services/rest/?method=flickr.photos.search&tags=\(text)&api_key=8bed04e178177e9bbdbed5ec569de99a&format=json&nojsoncallback=1&per_page=15&page=\(page)"
+        let urlString = "https://flickr.com/services/rest/?method=flickr.photos.search&tags=\(text)&api_key=8bed04e178177e9bbdbed5ec569de99a&format=json&nojsoncallback=1&per_page=200&page=\(page)"
         guard let url = URL(string: urlString) else {
             return
         }

@@ -6,7 +6,7 @@ extension UIImageView {
         self.image = placeholderImage
         self.tag = row
         let url = NSString(string: urlString)
-        ImageCache.sharedInstance.fetchImageWith(urlString: url, forInstance: self) { (image) in
+        ImageDownloadManager.shared.fetchImageWith(urlString: url, row: row) { (image) in
             DispatchQueue.main.async {
                 if image != nil, self.tag == row {
                     self.image = image
@@ -42,7 +42,7 @@ class ImageCache: NSObject {
     var objectUrlMapper: NSCache<AnyObject, NSString> = NSCache<AnyObject, NSString>()
     var urlImageMapper: NSCache<NSString, ImageObjectHandleModel> = NSCache<NSString, ImageObjectHandleModel>()
 
-    func fetchImageWith(urlString: NSString, forInstance instance: AnyObject, completionHandler: @escaping CompletionHandler) {
+    func fetchImageWith(urlString: NSString, forInstance instance: AnyObject, row: Int, completionHandler: @escaping CompletionHandler) {
         // Object had requested for an image earlier and the task is not completed.
         if let _: NSString = objectUrlMapper.object(forKey: instance) {
             removeCompletionHandlerForInstance(instance: instance)
@@ -63,31 +63,13 @@ class ImageCache: NSObject {
                 imageObject.requestArray = [ObjcetHandlerModel(withRequestingInstance: instance, completionHandler: completionHandler)]
                 urlImageMapper.setObject(imageObject, forKey: urlString)
                 objectUrlMapper.setObject(urlString, forKey: instance)
-                downloadImage(imageUrl: imageUrl)
             } else {
                 print("fetchImageWith(urlString:, forInstance, completionHandler) Error creating image url")
             }
         }
     }
 
-    func downloadImage(imageUrl: URL) {
-        let session = URLSession.shared
-        var request = URLRequest(url: imageUrl)
-        request.httpMethod = "GET"
-        let task = session.dataTask(with: request) { (data, response, error) in
-            if let httpRespose = response as? HTTPURLResponse, httpRespose.statusCode == 200 {
-                if let imageData = data {
-                    DispatchQueue.main.async {
-                        let image = UIImage(data: imageData)
-                        self.didDownloadImage(image: image, forUrl: imageUrl)
-                    }
-                }
-            } else {
-                print("HTTP  Error: \(String(describing: (response as? HTTPURLResponse)?.statusCode))")
-            }
-        }
-        task.resume()
-    }
+    
 
     func didDownloadImage(image: UIImage?, forUrl imageUrl: URL) {
         let urlString: NSString = imageUrl.absoluteString as NSString
